@@ -74,17 +74,15 @@ local function entry(st, job)
 
 	local count, is_dir = 1, false
 
-	local stat_output = Command("stat"):arg("-c"):arg("%F"):arg(file_path):output()
-	if stat_output and stat_output.status.success then
-		if stat_output.stdout:match("^%s*(.-)%s*$") == "directory" then
-			is_dir = true
-			local count_output = Command("sh")
-				:arg("-c")
-				:arg(string.format("find %s -type f 2>/dev/null | wc -l", ya.quote(file_path, true)))
-				:output()
-			if count_output and count_output.status.success then
-				count = tonumber(count_output.stdout:match("%d+")) or 0
-			end
+	local cha = fs.cha(Url(file_path))
+	if cha and cha.is_dir then
+		is_dir = true
+		local count_output = Command("sh")
+			:arg("-c")
+			:arg(string.format("find %s -type f 2>/dev/null | wc -l", ya.quote(file_path, true)))
+			:output()
+		if count_output and count_output.status.success then
+			count = tonumber(count_output.stdout:match("%d+")) or 0
 		end
 	end
 
